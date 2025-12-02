@@ -1,0 +1,40 @@
+trigger:
+  branches:
+    include:
+      - main
+  tags:
+    include:
+      - '*'
+
+pool:
+  name: 'VN Linux'
+
+variables:
+- group: AZDO_Credentials   
+
+steps:
+- checkout: none   
+- script: |
+    git clone https://github.com/ol-Sync/Test_Sync.git
+    cd Test_Sync
+  displayName: 'Clone GitHub repo'
+
+- script: |
+    cd Test_Sync
+    git config --global user.name "binh.nguyen"
+    git config --global user.email "binh.nguyen@orangelogic.com"
+  displayName: 'Set Git User'
+
+- script: |
+    cd Test_Sync
+    git remote add azdo https://$(AZURE_DEVOPS_PAT)@dev.azure.com/orangelogic/Integrations/_git/Test_Sync
+    git fetch azdo
+    git checkout main
+    git reset --hard azdo/main
+  displayName: 'Checkout Azure DevOps main and sync'
+  
+- script: |
+    cd Test_Sync
+    git merge --ff-only origin/main
+    git push azdo main
+  displayName: 'Fast-forward merge GitHub → Azure DevOps'
